@@ -800,9 +800,18 @@ async function installRustTarget(
 }
 
 async function addToolCachePythonVersionsToPath(): Promise<void> {
-  const allPythonVersions = tc.findAllVersions('python')
+  const allPythonVersions = tc.findAllVersions('Python')
   for (const ver of allPythonVersions) {
     const installDir = tc.find('Python', ver)
+    if (installDir) {
+      core.info(`Python version ${ver} was found in the local cache`)
+      core.addPath(installDir)
+      core.addPath(path.join(installDir, 'bin'))
+    }
+  }
+  const allPyPyVersions = tc.findAllVersions('PyPy')
+  for (const ver of allPyPyVersions) {
+    const installDir = tc.find('PyPy', ver)
     if (installDir) {
       core.info(`Python version ${ver} was found in the local cache`)
       core.addPath(installDir)
@@ -869,7 +878,9 @@ async function hostBuild(
   core.info(`Installing 'maturin' from tag '${maturinRelease}'`)
   const maturinPath = await installMaturin(maturinRelease)
   await exec.exec(maturinPath, ['--version'], {ignoreReturnCode: true})
-  await exec.exec('python3', ['-m', 'pip', 'install', 'cffi'])
+  await exec.exec('python3', ['-m', 'pip', 'install', 'cffi'], {
+    ignoreReturnCode: true
+  })
   if (IS_LINUX) {
     await exec.exec('python3', ['-m', 'pip', 'install', 'patchelf'])
   }
